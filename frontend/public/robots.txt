@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /apply
+
+Sitemap: https://formease-preview.preview.emergentagent.com/sitemap.xml

@@ -1,54 +1,68 @@
-import { useEffect } from "react";
+import { lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import Landing from "./pages/Landing";
+import Track from "./pages/Track";
+import Auth from "./pages/Auth";
+import Apply from "./pages/Apply";
+import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/admin/Admin";
+import AdminApplications from "./pages/admin/AdminApplications";
+import AdminApplicationDetail from "./pages/admin/AdminApplicationDetail";
+import Legal from "./pages/Legal";
+import { Loader2 } from "lucide-react";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+function FullPageLoader() {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50" data-testid="page-loader">
+      <Loader2 className="w-8 h-8 text-royal animate-spin" />
     </div>
   );
-};
+}
+
+function ProtectedRoute({ children }) {
+  const { user } = useAuth();
+  const location = useLocation();
+  if (user === null) return <FullPageLoader />;
+  if (user === false) return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />;
+  return children;
+}
+
+function AdminRoute({ children }) {
+  const { user } = useAuth();
+  if (user === null) return <FullPageLoader />;
+  if (user === false) return <Navigate to="/login?next=/admin" replace />;
+  if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
+  return children;
+}
 
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/track" element={<Track />} />
+            <Route path="/login" element={<Auth mode="login" />} />
+            <Route path="/register" element={<Auth mode="register" />} />
+            <Route path="/forgot-password" element={<Auth mode="forgot" />} />
+            <Route path="/reset-password" element={<Auth mode="reset" />} />
+            <Route path="/apply/:serviceKey" element={<ProtectedRoute><Apply /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/admin/applications" element={<AdminRoute><AdminApplications /></AdminRoute>} />
+            <Route path="/admin/applications/:applicationId" element={<AdminRoute><AdminApplicationDetail /></AdminRoute>} />
+            <Route path="/privacy" element={<Legal type="privacy" />} />
+            <Route path="/terms" element={<Legal type="terms" />} />
+            <Route path="/refund" element={<Legal type="refund" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+        <Toaster position="top-center" richColors />
+      </AuthProvider>
     </div>
   );
 }
