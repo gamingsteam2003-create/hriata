@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { SERVICES, SERVICE_FEE } from "../lib/services";
+import { SERVICES } from "../lib/services";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -103,7 +103,7 @@ export default function Landing() {
             <div className="absolute top-6 left-2 sm:left-6 rounded-full bg-white/80 backdrop-blur-xl border border-white/40 shadow-md px-4 py-1.5 text-xs font-semibold text-slate-700 animate-float-slow">Secure</div>
             <div className="absolute top-1/3 right-0 rounded-full bg-white/80 backdrop-blur-xl border border-white/40 shadow-md px-4 py-1.5 text-xs font-semibold text-slate-700 animate-float-slow" style={{ animationDelay: "1.2s" }}>Simple</div>
             <div className="absolute bottom-16 left-4 rounded-full bg-white/80 backdrop-blur-xl border border-white/40 shadow-md px-4 py-1.5 text-xs font-semibold text-slate-700 animate-float-slow" style={{ animationDelay: "2s" }}>Professional</div>
-            <div className="absolute bottom-4 right-6 rounded-full bg-navy text-white shadow-lg px-4 py-1.5 text-xs font-semibold animate-float-slow" style={{ animationDelay: "0.6s" }}>₹250 per service</div>
+            <div className="absolute bottom-4 right-6 rounded-full bg-navy text-white shadow-lg px-4 py-1.5 text-xs font-semibold animate-float-slow" style={{ animationDelay: "0.6s" }}>From ₹100 per service</div>
           </div>
         </div>
       </section>
@@ -118,7 +118,7 @@ export default function Landing() {
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { icon: Lock, title: "Secure Documents", text: "Your uploaded documents are handled through a secure application workflow with private, authenticated access.", testid: "trust-secure" },
-              { icon: CreditCard, title: "Transparent Pricing", text: "Every listed service has a clear fixed assistance fee of ₹250. No hidden charges, ever.", testid: "trust-pricing" },
+              { icon: CreditCard, title: "Transparent Pricing", text: "Every service has a clear fixed fee shown upfront — ₹100 for Scholarship and PAN Card, ₹350 for Learner's Licence. No hidden charges, ever.", testid: "trust-pricing" },
               { icon: ClipboardList, title: "Application Tracking", text: "Track the progress of your application anytime using your unique Application ID.", testid: "trust-tracking" },
             ].map((f, i) => (
               <motion.div key={f.title} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.12 }}
@@ -158,7 +158,7 @@ export default function Landing() {
                   <div className="mt-6 flex items-end justify-between">
                     <div>
                       <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Assistance fee</p>
-                      <p className="text-3xl font-semibold text-slate-900 font-heading">₹{SERVICE_FEE}</p>
+                      <p className="text-3xl font-semibold text-slate-900 font-heading">₹{s.fee}</p>
                     </div>
                   </div>
                   <Link to={`/apply/${s.key}`} data-testid={`service-apply-${s.key}`}
@@ -183,7 +183,7 @@ export default function Landing() {
             {[
               { icon: FileEdit, step: "01", title: "Choose a Service", text: "Pick Scholarship, PAN Card or Learner's Licence and fill a simple guided form." },
               { icon: UploadCloud, step: "02", title: "Upload Documents", text: "Securely upload the required documents with our drag-and-drop uploader." },
-              { icon: CreditCard, step: "03", title: "Pay ₹250", text: "Complete a secure payment. Your application is verified on our servers." },
+              { icon: CreditCard, step: "03", title: "Pay Securely", text: "Complete a secure payment of your service fee. Your application is verified on our servers." },
               { icon: BadgeCheck, step: "04", title: "Track & Relax", text: "Get your Application ID and track every status update in real time." },
             ].map((s, i) => (
               <motion.div key={s.step} {...fadeUp} transition={{ ...fadeUp.transition, delay: i * 0.1 }}
@@ -205,7 +205,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           <div>
             <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">Ready to simplify your application?</h2>
-            <p className="mt-3 text-slate-400 text-base">One platform. Three services. A flat ₹250 assistance fee.</p>
+            <p className="mt-3 text-slate-400 text-base">One platform. Three services. Simple fixed pricing from ₹100.</p>
           </div>
           <Link to="/#services" data-testid="cta-apply-btn"
             className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-semibold text-navy shadow-xl hover:-translate-y-0.5 active:scale-95 transition-transform shrink-0">
@@ -261,6 +261,9 @@ export default function Landing() {
       </a>
 
       <Footer />
+    </div>
+  );
+}
     </div>
   );
 }

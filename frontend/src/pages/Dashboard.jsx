@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../lib/api";
 import { useAuth } from "../context/AuthContext";
-import { SERVICES, STATUS_LABELS, STATUS_COLORS, SERVICE_FEE } from "../lib/services";
+import { SERVICES, STATUS_LABELS, STATUS_COLORS } from "../lib/services";
 
 const ICONS = { scholarship: GraduationCap, pan: IdCard, learner: Car };
 
@@ -63,7 +63,7 @@ export default function Dashboard() {
             </div>
             <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" data-testid="stats-payments">
               <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">Total Paid</p>
-              <p className="mt-2 text-4xl font-heading font-semibold text-slate-900">₹{paid.length * SERVICE_FEE}</p>
+              <p className="mt-2 text-4xl font-heading font-semibold text-slate-900">₹{paid.reduce((sum, a) => sum + (SERVICES[a.service_type]?.fee || 0), 0)}</p>
               <p className="mt-1 text-xs text-slate-500">{paid.length} successful payment{paid.length === 1 ? "" : "s"}</p>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function Dashboard() {
                       {STATUS_LABELS[a.status]}
                     </span>
                     <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${a.payment_status === "paid" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                      {a.payment_status === "paid" ? `₹${SERVICE_FEE} Paid` : "Payment Pending"}
+                      {a.payment_status === "paid" ? `₹${SERVICES[a.service_type]?.fee} Paid` : "Payment Pending"}
                     </span>
                     {a.status === "draft" ? (
                       <Link to={`/apply/${a.service_type}`} data-testid={`application-continue-${a.application_id}`}
@@ -130,7 +130,7 @@ export default function Dashboard() {
                       <tr key={a.application_id}>
                         <td className="px-6 py-4 font-medium text-slate-800">{a.application_id}</td>
                         <td className="px-6 py-4 text-slate-600">{SERVICES[a.service_type]?.short}</td>
-                        <td className="px-6 py-4 font-semibold text-slate-800">₹{SERVICE_FEE}</td>
+                        <td className="px-6 py-4 font-semibold text-slate-800">₹{SERVICES[a.service_type]?.fee}</td>
                         <td className="px-6 py-4"><span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700">Successful</span></td>
                       </tr>
                     ))}

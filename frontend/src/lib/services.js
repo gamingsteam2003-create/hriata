@@ -1,10 +1,9 @@
-export const SERVICE_FEE = 250;
-
 export const SERVICES = {
   scholarship: {
     key: "scholarship",
     name: "Scholarship Application",
     short: "Scholarship",
+    fee: 100,
     description: "Get assistance with completing and preparing your scholarship application.",
     docs: [
       { key: "photograph", label: "Photograph", required: true },
@@ -28,6 +27,7 @@ export const SERVICES = {
     key: "pan",
     name: "PAN Card Application",
     short: "PAN Card",
+    fee: 100,
     description: "Get assistance with completing your PAN card application and preparing the required information.",
     docs: [
       { key: "identity_proof", label: "Identity Proof", required: true },
@@ -46,6 +46,7 @@ export const SERVICES = {
     key: "learner",
     name: "Learner's Licence",
     short: "Learner's Licence",
+    fee: 350,
     description: "Get assistance with completing your learner's licence application.",
     docs: [
       { key: "age_proof", label: "Age Proof", required: true },

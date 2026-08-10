@@ -172,7 +172,7 @@ export default function AdminApplicationDetail() {
         <div className="space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" data-testid="admin-detail-payment">
             <div className="flex items-center gap-2 mb-4"><CreditCard className="w-4 h-4 text-slate-400" /><h3 className="text-sm font-semibold text-slate-800">Payment</h3></div>
-            <p className="text-3xl font-heading font-semibold text-slate-900">₹250</p>
+            <p className="text-3xl font-heading font-semibold text-slate-900">₹{SERVICES[app.service_type]?.fee}</p>
             <span className={`inline-block mt-2 text-xs font-bold px-3 py-1.5 rounded-full ${app.payment_status === "paid" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
               {app.payment_status === "paid" ? "Successful" : "Pending"}
             </span>

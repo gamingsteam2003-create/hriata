@@ -19,7 +19,7 @@ const CONTENT = {
     testid: "terms-page",
     sections: [
       ["Nature of service", "FormEase is an independent application assistance service. We help customers complete and prepare Scholarship, PAN Card and Learner's Licence applications. FormEase is not a government website, government authority, or an official partner of the Income Tax Department, Parivahan, any state government or any scholarship authority. We do not issue PAN cards, licences, scholarships or certificates."],
-      ["Service fee", "Each application assistance service is charged at a flat fee of ₹250, payable before submission. The fee covers assistance with completing and preparing your application only."],
+      ["Service fee", "Each application assistance service is charged at a fixed assistance fee — ₹100 for Scholarship and PAN Card, ₹350 for Learner's Licence — payable before submission. The fee covers assistance with completing and preparing your application only."],
       ["Customer responsibilities", "You are responsible for providing accurate information and genuine documents. Submitting false information or forged documents may result in rejection of your application and termination of service without refund."],
       ["Outcomes", "Approval or rejection of any application rests solely with the respective authority. FormEase does not guarantee approval, timelines or outcomes of any application."],
       ["Acceptable use", "You agree not to misuse the platform, attempt unauthorized access, or upload malicious files. Accounts involved in abuse may be suspended."],
@@ -30,7 +30,7 @@ const CONTENT = {
     title: "Refund Policy",
     testid: "refund-page",
     sections: [
-      ["Before processing begins", "If your application has not yet entered processing, you may request a refund of the ₹250 assistance fee by contacting us with your Application ID."],
+      ["Before processing begins", "If your application has not yet entered processing, you may request a refund of the assistance fee by contacting us with your Application ID."],
       ["After processing begins", "Once our team has begun reviewing or processing your application, the assistance fee becomes non-refundable, as the service has been rendered."],
       ["Failed or duplicate payments", "If a payment was debited but not confirmed, or you were charged more than once for the same application, the full duplicate/failed amount will be refunded to the original payment method within 5–7 business days after verification."],
       ["How to request", "Contact us via phone, email or WhatsApp listed in the Contact section, quoting your Application ID and payment reference."],

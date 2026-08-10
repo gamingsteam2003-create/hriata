@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import Navbar from "../components/Navbar";
 import FileUpload from "../components/FileUpload";
 import api, { formatApiError } from "../lib/api";
-import { SERVICES, SERVICE_FEE } from "../lib/services";
+import { SERVICES } from "../lib/services";
 
 const STEPS = ["Personal Details", "Application Details", "Documents", "Review", "Payment", "Submitted"];
 
@@ -96,7 +96,7 @@ function DemoPaymentModal({ order, onSuccess, onClose, paying }) {
         </div>
         <div className="p-6">
           <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Order {order.order_id.slice(0, 20)}…</p>
-          <p className="mt-2 text-4xl font-heading font-semibold text-slate-900">₹{SERVICE_FEE}</p>
+          <p className="mt-2 text-4xl font-heading font-semibold text-slate-900">₹{(order.amount || 0) / 100}</p>
           <p className="mt-1 text-sm text-slate-500">Application assistance fee</p>
           <div className="mt-5 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-800 leading-relaxed">
             This is a simulated demo checkout. No real money is charged. Add Razorpay keys to enable live payments.
@@ -104,7 +104,7 @@ function DemoPaymentModal({ order, onSuccess, onClose, paying }) {
           <button onClick={onSuccess} disabled={paying} data-testid="demo-pay-btn"
             className="mt-6 w-full inline-flex items-center justify-center gap-2 rounded-full bg-royal py-3.5 text-sm font-semibold text-white shadow-md hover:bg-royal-hover active:scale-[0.98] transition-[background-color,transform] disabled:opacity-60">
             {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
-            {paying ? "Processing…" : `Pay ₹${SERVICE_FEE}`}
+            {paying ? "Processing…" : `Pay ₹${(order.amount || 0) / 100}`}
           </button>
           <button onClick={onClose} data-testid="demo-pay-cancel"
             className="mt-3 w-full text-center text-xs font-medium text-slate-400 hover:text-slate-600">
@@ -354,7 +354,7 @@ export default function Apply() {
                     </div>
                     <div className="py-4 grid grid-cols-3 gap-4">
                       <dt className="text-xs font-semibold text-slate-400 uppercase tracking-wider pt-1">Service Fee</dt>
-                      <dd className="col-span-2 text-2xl font-heading font-semibold text-slate-900">₹{SERVICE_FEE}</dd>
+                      <dd className="col-span-2 text-2xl font-heading font-semibold text-slate-900">₹{service.fee}</dd>
                     </div>
                   </dl>
                 </div>
@@ -369,12 +369,12 @@ export default function Apply() {
                   <p className="mt-2 text-sm text-slate-500 max-w-sm mx-auto">
                     Secure payment for your {service.name} assistance. Your application is submitted only after server-side verification.
                   </p>
-                  <p className="mt-6 text-5xl font-heading font-semibold text-slate-900">₹{SERVICE_FEE}</p>
+                  <p className="mt-6 text-5xl font-heading font-semibold text-slate-900">₹{service.fee}</p>
                   <p className="text-xs text-slate-400 mt-1">One-time assistance fee</p>
                   <button onClick={startPayment} disabled={paying} data-testid="pay-now-btn"
                     className="mt-8 inline-flex items-center justify-center gap-2 rounded-full bg-royal px-10 py-4 text-sm font-semibold text-white shadow-lg shadow-blue-700/20 hover:bg-royal-hover active:scale-95 transition-[background-color,transform] disabled:opacity-60">
                     {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    Pay ₹{SERVICE_FEE} Securely
+                    Pay ₹{service.fee} Securely
                   </button>
                   <p className="mt-4 text-xs text-slate-400 flex items-center justify-center gap-1.5">
                     <ShieldCheck className="w-3.5 h-3.5" /> 256-bit encrypted · Server-verified
@@ -407,7 +407,7 @@ export default function Apply() {
                     </div>
                     <div className="rounded-xl bg-slate-50 p-4">
                       <p className="text-xs text-slate-400 font-medium">Payment</p>
-                      <p className="text-sm font-semibold text-emerald-600">₹{SERVICE_FEE} — Successful</p>
+                      <p className="text-sm font-semibold text-emerald-600">₹{service.fee} — Successful</p>
                     </div>
                     <div className="rounded-xl bg-slate-50 p-4">
                       <p className="text-xs text-slate-400 font-medium">Status</p>
@@ -438,7 +438,7 @@ export default function Apply() {
               <button onClick={goNext} disabled={saving} data-testid="wizard-next-btn"
                 className="inline-flex items-center gap-2 rounded-full bg-royal px-7 py-3 text-sm font-semibold text-white shadow-md hover:bg-royal-hover active:scale-95 transition-[background-color,transform] disabled:opacity-60">
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {step === 4 ? `Proceed to Payment — ₹${SERVICE_FEE}` : step === 3 ? "Review Application" : "Save & Continue"}
+                {step === 4 ? `Proceed to Payment — ₹${service.fee}` : step === 3 ? "Review Application" : "Save & Continue"}
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>

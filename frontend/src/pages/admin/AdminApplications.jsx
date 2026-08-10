@@ -83,7 +83,7 @@ export default function AdminApplications() {
                     <td className="px-5 py-4 text-slate-500">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</td>
                     <td className="px-5 py-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${a.payment_status === "paid" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
-                        {a.payment_status === "paid" ? "₹250 Paid" : "Pending"}
+                        {a.payment_status === "paid" ? `₹${SERVICES[a.service_type]?.fee} Paid` : "Pending"}
                       </span>
                     </td>
                     <td className="px-5 py-4">

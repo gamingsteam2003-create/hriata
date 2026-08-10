@@ -4,7 +4,7 @@ import { Search, CheckCircle2, Circle, Loader2, AlertCircle, Clock } from "lucid
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api, { formatApiError } from "../lib/api";
-import { TRACK_STEPS, trackProgress, STATUS_LABELS, STATUS_COLORS } from "../lib/services";
+import { TRACK_STEPS, trackProgress, STATUS_LABELS, STATUS_COLORS, SERVICES } from "../lib/services";
 
 export default function Track() {
   const [appId, setAppId] = useState("");
@@ -103,7 +103,7 @@ export default function Track() {
                   <div>
                     <p className="text-xs text-slate-400 font-medium">Payment</p>
                     <p className="font-semibold text-slate-800" data-testid="track-result-payment">
-                      {result.payment_status === "paid" ? "₹250 — Successful" : "Pending"}
+                      {result.payment_status === "paid" ? `₹${SERVICES[result.service_type]?.fee} — Successful` : "Pending"}
                     </p>
                   </div>
                   <div>

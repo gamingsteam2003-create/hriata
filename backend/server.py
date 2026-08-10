@@ -73,8 +73,7 @@ logger = logging.getLogger("formease")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 JWT_ALGORITHM = "HS256"
-SERVICE_FEE_PAISE = 25000
-SERVICE_FEE_INR = 250
+SERVICE_FEES_PAISE = {"scholarship": 10000, "pan": 10000, "learner": 35000}
 SERVICES = {
     "scholarship": "Scholarship Application",
     "pan": "PAN Card Application",
@@ -432,11 +431,12 @@ async def send_notification(channel: str, ntype: str, recipient: str, message: s
 
 async def notify_new_application(app_doc: dict):
     name = app_doc.get("applicant_data", {}).get("full_name", "Customer")
+    fee_inr = SERVICE_FEES_PAISE[app_doc["service_type"]] // 100
     msg = (f"New FormEase Application\n"
            f"Application ID: {app_doc['application_id']}\n"
            f"Service: {SERVICES[app_doc['service_type']]}\n"
            f"Applicant: {name}\n"
-           f"Amount: Rs.{SERVICE_FEE_INR}\n"
+           f"Amount: Rs.{fee_inr}\n"
            f"Payment: Successful\n"
            f"Documents: {len(app_doc.get('documents', []))} uploaded\n"
            f"Status: New\n\nOpen Admin Dashboard.")
@@ -448,7 +448,7 @@ async def notify_new_application(app_doc: dict):
     if email:
         await send_notification("email", "application_received_customer", email,
                                 f"Application Received - {app_doc['application_id']}\n\n"
-                                f"Dear {name},\nYour {SERVICES[app_doc['service_type']]} application has been received and payment of Rs.{SERVICE_FEE_INR} is confirmed.\n"
+                                f"Dear {name},\nYour {SERVICES[app_doc['service_type']]} application has been received and payment of Rs.{fee_inr} is confirmed.\n"
                                 f"Track it anytime with your Application ID: {app_doc['application_id']}",
                                 app_doc["application_id"])
 
@@ -619,6 +619,7 @@ async def get_document(application_id: str, stored_name: str, user: dict = Depen
 @api.post("/payments/create-order")
 async def create_order(body: dict, user: dict = Depends(get_current_user)):
     app_doc = await get_owned_application(body.get("application_id", ""), user)
+    service_fee = SERVICE_FEES_PAISE[app_doc["service_type"]]
     if app_doc["payment_status"] == "paid":
         raise HTTPException(400, "This application is already paid")
     missing = [d["label"] for d in DOC_SPECS[app_doc["service_type"]]
@@ -627,7 +628,7 @@ async def create_order(body: dict, user: dict = Depends(get_current_user)):
         raise HTTPException(400, "Required documents missing: " + ", ".join(missing))
     if PAYMENTS_LIVE:
         order = razorpay_client.order.create({
-            "amount": SERVICE_FEE_PAISE, "currency": "INR",
+            "amount": service_fee, "currency": "INR",
             "receipt": app_doc["application_id"][:40], "payment_capture": 1})
         order_id, mode, key_id = order["id"], "live", RAZORPAY_KEY_ID
     elif DEMO_MODE:
@@ -637,10 +638,10 @@ async def create_order(body: dict, user: dict = Depends(get_current_user)):
     await db.payments.update_one(
         {"application_id": app_doc["application_id"], "status": {"$ne": "paid"}},
         {"$set": {"application_id": app_doc["application_id"], "order_id": order_id,
-                  "amount": SERVICE_FEE_PAISE, "currency": "INR", "status": "created",
+                  "amount": service_fee, "currency": "INR", "status": "created",
                   "mode": mode, "user_id": str(user["_id"]), "created_at": now_iso()}},
         upsert=True)
-    return {"order_id": order_id, "amount": SERVICE_FEE_PAISE, "currency": "INR",
+    return {"order_id": order_id, "amount": service_fee, "currency": "INR",
             "mode": mode, "key_id": key_id, "application_id": app_doc["application_id"]}
 
 
@@ -734,13 +735,13 @@ async def admin_stats(admin: dict = Depends(require_admin)):
     month_revenue = sum(p["amount"] for p in paid if p.get("verified_at", "") >= month) // 100
     by_service = {}
     apps = [a async for a in db.applications.find(base, {"service_type": 1, "application_id": 1}).limit(10000)]
-    paid_app_ids = {p["application_id"] for p in paid}
+    paid_map = {p["application_id"]: p["amount"] for p in paid}
     for a in apps:
         s = SERVICES[a["service_type"]]
         by_service.setdefault(s, {"applications": 0, "revenue": 0})
         by_service[s]["applications"] += 1
-        if a["application_id"] in paid_app_ids:
-            by_service[s]["revenue"] += SERVICE_FEE_INR
+        if a["application_id"] in paid_map:
+            by_service[s]["revenue"] += paid_map[a["application_id"]] // 100
     return {"total_applications": total, "todays_applications": todays, "pending": pending,
             "processing": processing, "completed": completed, "total_revenue": total_revenue,
             "today_revenue": today_revenue, "month_revenue": month_revenue, "by_service": by_service,
@@ -891,7 +892,7 @@ async def root():
 
 @api.get("/config")
 async def public_config():
-    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEE_INR} for k, v in SERVICES.items()],
+    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
             "doc_specs": DOC_SPECS, "payments_mode": "live" if PAYMENTS_LIVE else "demo",
             "demo_mode": DEMO_MODE, "max_upload_mb": int(os.environ.get("MAX_UPLOAD_MB", "5"))}
 
@@ -948,7 +949,7 @@ async def seed_demo_data():
             "admin_notes": [], "status_history": history, "created_at": created, "updated_at": created})
         await db.payments.insert_one({
             "application_id": app_id, "order_id": f"order_demo_{uuid.uuid4().hex[:12]}",
-            "payment_id": f"pay_demo_{uuid.uuid4().hex[:12]}", "amount": SERVICE_FEE_PAISE,
+            "payment_id": f"pay_demo_{uuid.uuid4().hex[:12]}", "amount": SERVICE_FEES_PAISE[service],
             "currency": "INR", "status": "paid", "mode": "demo",
             "user_id": str(demo_user["_id"]), "created_at": created, "verified_at": created})
     logger.info("Demo sample applications seeded")
