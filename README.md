@@ -13,6 +13,7 @@ Premium online application assistance platform for three services, each at a fla
 - **Frontend:** React 19, Tailwind CSS, shadcn/ui, Framer Motion, React Three Fiber (3D hero), Recharts
 - **Backend:** FastAPI (Python), Motor (async MongoDB)
 - **Database:** MongoDB
+- **File storage:** Emergent managed object storage (documents persist across deploys; all access proxied through authenticated backend endpoints — no public URLs)
 - **Payments:** Razorpay (server-side order creation + signature verification + webhook). Ships in **Demo Mode** (simulated checkout) until real keys are configured.
 - **Notifications:** WhatsApp Cloud API + Resend email architecture — **mocked/logged** until provider keys are configured.
 

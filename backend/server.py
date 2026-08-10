@@ -8,13 +8,11 @@ import logging
 import secrets
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from typing import Optional
 
 import bcrypt
 import jwt
 import razorpay
 from fastapi import FastAPI, APIRouter, Request, Response, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import FileResponse
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
@@ -22,6 +20,50 @@ from pydantic import BaseModel, EmailStr
 ROOT_DIR = Path(__file__).parent
 UPLOAD_DIR = ROOT_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# ---- Emergent object storage ----
+import asyncio
+import requests as http_requests
+
+STORAGE_BASE = (os.environ.get("INTEGRATION_PROXY_URL") or "").strip() or "https://integrations.emergentagent.com"
+STORAGE_URL = STORAGE_BASE.rstrip("/") + "/objstore/api/v1/storage"
+EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
+APP_NAME = "formease"
+storage_key = None
+
+
+def init_storage(force: bool = False):
+    global storage_key
+    if storage_key and not force:
+        return storage_key
+    resp = http_requests.post(f"{STORAGE_URL}/init", json={"emergent_key": EMERGENT_KEY}, timeout=30)
+    resp.raise_for_status()
+    storage_key = resp.json()["storage_key"]
+    return storage_key
+
+
+def put_object(path: str, data: bytes, content_type: str) -> dict:
+    key = init_storage()
+    resp = http_requests.put(f"{STORAGE_URL}/objects/{path}",
+                             headers={"X-Storage-Key": key, "Content-Type": content_type},
+                             data=data, timeout=120)
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = http_requests.put(f"{STORAGE_URL}/objects/{path}",
+                                 headers={"X-Storage-Key": key, "Content-Type": content_type},
+                                 data=data, timeout=120)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def get_object(path: str):
+    key = init_storage()
+    resp = http_requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    if resp.status_code == 404:
+        key = init_storage(force=True)
+        resp = http_requests.get(f"{STORAGE_URL}/objects/{path}", headers={"X-Storage-Key": key}, timeout=60)
+    resp.raise_for_status()
+    return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
@@ -520,21 +562,22 @@ async def upload_document(application_id: str = Form(...), doc_type: str = Form(
         raise HTTPException(400, f"File exceeds the {MAX_UPLOAD_BYTES // (1024*1024)}MB size limit")
     if len(content) == 0:
         raise HTTPException(400, "Empty file")
-    app_dir = UPLOAD_DIR / application_id
-    app_dir.mkdir(exist_ok=True)
     docs = app_doc.get("documents", [])
-    for old in docs:
-        if old["doc_type"] == doc_type:
-            old_path = UPLOAD_DIR / application_id / old["stored_name"]
-            if old_path.exists():
-                old_path.unlink()
+    # Dropping the DB reference soft-deletes the old file (object storage has no delete API)
     docs = [d for d in docs if d["doc_type"] != doc_type]
     stored_name = f"{doc_type}_{uuid.uuid4().hex[:10]}{ext}"
-    (app_dir / stored_name).write_bytes(content)
+    content_type = file.content_type or "application/octet-stream"
+    storage_path = f"{APP_NAME}/uploads/{application_id}/{stored_name}"
+    try:
+        result = await asyncio.to_thread(put_object, storage_path, content, content_type)
+        storage_path = result["path"]
+    except Exception as e:
+        logger.error(f"Object storage upload failed: {e}")
+        raise HTTPException(503, "Storage service unavailable. Please try again.")
     spec = next(d for d in DOC_SPECS[app_doc["service_type"]] if d["key"] == doc_type)
     docs.append({"doc_type": doc_type, "label": spec["label"], "required": spec["required"],
-                 "file_name": file.filename, "stored_name": stored_name, "size": len(content),
-                 "content_type": file.content_type or "application/octet-stream",
+                 "file_name": file.filename, "stored_name": stored_name, "storage_path": storage_path,
+                 "size": len(content), "content_type": content_type, "is_deleted": False,
                  "verified": False, "replacement_requested": False, "uploaded_at": now_iso()})
     await db.applications.update_one({"_id": app_doc["_id"]},
                                      {"$set": {"documents": docs, "updated_at": now_iso()}})
@@ -564,12 +607,15 @@ async def get_document(application_id: str, stored_name: str, user: dict = Depen
     if not re.fullmatch(r"[A-Za-z0-9_\-\.]+", stored_name):
         raise HTTPException(400, "Invalid file name")
     doc = next((d for d in app_doc.get("documents", []) if d["stored_name"] == stored_name), None)
-    if not doc:
+    if not doc or not doc.get("storage_path"):
         raise HTTPException(404, "Document not found")
-    path = UPLOAD_DIR / application_id / stored_name
-    if not path.exists():
-        raise HTTPException(404, "File missing on server")
-    return FileResponse(path, media_type=doc["content_type"], filename=doc["file_name"])
+    try:
+        data, content_type = await asyncio.to_thread(get_object, doc["storage_path"])
+    except Exception as e:
+        logger.error(f"Object storage download failed: {e}")
+        raise HTTPException(404, "File missing on storage")
+    return Response(content=data, media_type=doc.get("content_type", content_type),
+                    headers={"Content-Disposition": f'inline; filename="{doc["file_name"]}"'})
 
 
 # ---------------- Payments ----------------
@@ -817,7 +863,6 @@ async def admin_document_action(application_id: str, doc_type: str, body: dict,
 
 @api.get("/admin/analytics")
 async def admin_analytics(admin: dict = Depends(require_admin)):
-    since = (datetime.now(timezone.utc) - timedelta(days=29)).date().isoformat()
     apps = [a async for a in db.applications.find({"status": {"$ne": "draft"}}, {"created_at": 1, "service_type": 1, "status": 1}).limit(10000)]
     paid = [p async for p in db.payments.find({"status": "paid"}, {"verified_at": 1, "amount": 1}).limit(10000)]
     days = [(datetime.now(timezone.utc).date() - timedelta(days=i)).isoformat() for i in range(29, -1, -1)]
@@ -922,6 +967,11 @@ async def startup():
     await db.login_attempts.create_index("identifier")
     await seed_admin()
     await seed_demo_data()
+    try:
+        await asyncio.to_thread(init_storage)
+        logger.info("Object storage initialized")
+    except Exception as e:
+        logger.error(f"Object storage init failed: {e}")
 
 
 @app.on_event("shutdown")
