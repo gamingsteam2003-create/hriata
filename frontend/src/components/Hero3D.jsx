@@ -1,14 +1,14 @@
 import { useRef, useMemo, useEffect } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Environment, RoundedBox, ContactShadows } from "@react-three/drei";
+import { Float, RoundedBox, ContactShadows } from "@react-three/drei";
 
 function DocumentPanel({ position, rotation, tint = "#ffffff", lines = 4 }) {
   return (
     <Float speed={1.4} rotationIntensity={0.5} floatIntensity={1.1}>
       <group position={position} rotation={rotation}>
         <RoundedBox args={[1.7, 2.2, 0.07]} radius={0.06}>
-          <meshPhysicalMaterial color={tint} transmission={0.55} roughness={0.18} thickness={1.6} transparent opacity={0.92} />
+          <meshPhysicalMaterial color={tint} transmission={0.12} roughness={0.25} thickness={1.2} clearcoat={0.4} />
         </RoundedBox>
         {Array.from({ length: lines }).map((_, i) => (
           <mesh key={i} position={[-0.15, 0.65 - i * 0.32, 0.06]}>
@@ -59,7 +59,7 @@ function IdCard({ position, rotation }) {
     <Float speed={1.7} rotationIntensity={0.6} floatIntensity={1.0}>
       <group position={position} rotation={rotation}>
         <RoundedBox args={[1.9, 1.2, 0.06]} radius={0.08}>
-          <meshPhysicalMaterial color="#EFF6FF" transmission={0.4} roughness={0.2} thickness={1.2} transparent opacity={0.95} />
+          <meshPhysicalMaterial color="#EFF6FF" transmission={0.1} roughness={0.25} thickness={1.0} clearcoat={0.4} />
         </RoundedBox>
         <mesh position={[-0.6, 0, 0.05]}>
           <circleGeometry args={[0.26, 32]} />
@@ -130,11 +130,12 @@ export default function Hero3D() {
   return (
     <div className="w-full h-full pointer-events-none" data-testid="hero-3d-canvas">
       <Canvas camera={{ position: [0, 0, 7], fov: 42 }} dpr={[1, 1.75]} gl={{ antialias: true, alpha: true }}>
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[4, 6, 5]} intensity={1.1} />
+        <ambientLight intensity={1.1} />
+        <directionalLight position={[4, 6, 5]} intensity={1.6} />
+        <directionalLight position={[-5, 2, -3]} intensity={0.5} color="#93C5FD" />
+        <pointLight position={[0, -2, 4]} intensity={0.6} color="#DBEAFE" />
         <SceneRig pointer={pointer} />
         <ContactShadows position={[0, -2.4, 0]} opacity={0.18} scale={12} blur={2.6} far={4} color="#0A192F" />
-        <Environment preset="city" />
       </Canvas>
     </div>
   );
