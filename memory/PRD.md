@@ -21,6 +21,11 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.6 update)
+- Fixed FAILED production deploy: root cause was @react-three/drei (camera-controls) requiring Node >=22 while build image runs Node 20 → added frontend/.yarnrc with --install.ignore-engines true; yarn install (exact Docker flags) + yarn build both verified passing
+- Fixed deployment-agent blockers: quoted frontend/.env values with spaces; added projections + limits to admin stats/analytics queries; CORS now honors CORS_ORIGINS env
+- Testing agent iteration_2: 100% pass (3D hero renders on Node 20, no runtime issues); deployment agent final: PASS with no blockers
+
 ## Implemented (June 2026 — v1.5 update)
 - Vercel deployment prep: frontend/vercel.json (SPA rewrites, CRA build) + DEPLOYMENT.md (full free-tier guide: Vercel frontend + Render backend + MongoDB Atlas), pushed to GitHub
 
