@@ -31,6 +31,15 @@ dist/
 dist
 
 # Environment files (comprehensive coverage)
+.env
+**/.env
+!**/.env.example
+
+# Private uploaded user documents
+backend/uploads/
+
+# Test artifacts
+test_reports/
 
 *token.json*
 *credentials.json*
