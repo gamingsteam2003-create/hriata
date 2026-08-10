@@ -590,11 +590,7 @@ async def delete_document(application_id: str, doc_type: str, user: dict = Depen
     if app_doc["status"] not in ("draft", "need_more_info"):
         raise HTTPException(400, "Documents can no longer be modified for this application")
     docs = app_doc.get("documents", [])
-    target = next((d for d in docs if d["doc_type"] == doc_type), None)
-    if target:
-        path = UPLOAD_DIR / application_id / target["stored_name"]
-        if path.exists():
-            path.unlink()
+    # Soft-delete: dropping the DB reference removes access (storage has no delete API)
     docs = [d for d in docs if d["doc_type"] != doc_type]
     await db.applications.update_one({"_id": app_doc["_id"]},
                                      {"$set": {"documents": docs, "updated_at": now_iso()}})

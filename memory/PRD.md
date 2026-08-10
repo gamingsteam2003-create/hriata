@@ -21,6 +21,11 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.8 update)
+- Migrated document storage from local disk to Emergent managed object storage: uploads → formease/uploads/{app_id}/{uuid}.{ext}, downloads proxied through authenticated backend (owner/admin only), soft-delete (DB reference drop), startup init with 404 force-reinit retry
+- Testing agent iteration_4: 10/10 new object-storage tests pass + full UI E2E (register → wizard → upload → preview → replace → demo payment → admin document view) pass; byte-identical downloads verified; 401/403 access control verified
+- Removed dead local-disk code; test data cleaned (DB back to admin-only)
+
 ## Implemented (June 2026 — v1.7 update)
 - Emergent-managed Google sign-in added alongside JWT auth: "Continue with Google" on /login + /register → auth.emergentagent.com → AuthCallback (synchronous useLocation().hash detection) → POST /api/auth/google/session (server-side Emergent session-data verification) → user_sessions collection + httpOnly session_token cookie (7d)
 - get_current_user now accepts JWT cookie, session_token cookie, or Bearer (JWT or session token); gamingsteam2003@gmail.com via Google gets admin role; Google users have no password (password login guarded)
