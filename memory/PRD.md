@@ -21,6 +21,10 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v2.2 update)
+- Deploy-blocker sweep: CORS now mirrors any origin with credentials (allow_origin_regex when CORS_ORIGINS='*') so the production domain works; deployment_agent final status: PASS, zero blockers
+- Deployment path decided: Emergent one-click Deploy (user to click); Vercel-only hosting rejected (frontend-only, needs Render+Atlas split) — DEPLOYMENT.md kept as manual fallback guide
+
 ## Implemented (June 2026 — v2.1 update)
 - Per-service pricing: Scholarship ₹100, PAN ₹100, Learner's Licence ₹350 — amounts computed server-side (SERVICE_FEES_PAISE), tamper-proof (create-order ignores body amount/currency), real Razorpay orders confirmed at 10000/10000/35000 paise; all UI surfaces updated (cards, wizard, review, success, track, dashboard, admin, legal pages)
 - Testing agent iteration_6: 12/12 backend pricing tests + 100% frontend; agent fixed a critical Landing.jsx build break (stray closing tags); yarn build verified clean
