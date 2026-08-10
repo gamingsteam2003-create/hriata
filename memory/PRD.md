@@ -21,6 +21,11 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.4 update)
+- GitHub prep complete: repo committed locally on `main`, remote target https://github.com/gamingsteam2003-create/hriata.git
+- .gitignore hardened: .env files (all secrets), backend/uploads (private user documents), test artifacts — verified zero .env files tracked
+- Push pending on user side via Emergent "Save to GitHub" button (no PAT provided)
+
 ## Implemented (June 2026 — v1.3 update)
 - ALL demo/sample/test data wiped: only admin user remains; first real application will be FE-2026-00001
 - Demo customer seeding now gated behind SEED_SAMPLE_DATA env flag (set "false"); demo@formease.in removed
