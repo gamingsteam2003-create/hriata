@@ -21,6 +21,9 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.5 update)
+- Vercel deployment prep: frontend/vercel.json (SPA rewrites, CRA build) + DEPLOYMENT.md (full free-tier guide: Vercel frontend + Render backend + MongoDB Atlas), pushed to GitHub
+
 ## Implemented (June 2026 — v1.4 update)
 - PUSHED TO GITHUB: https://github.com/gamingsteam2003-create/hriata (main branch) via classic PAT with repo scope
 - .gitignore hardened: .env files (all secrets), backend/uploads (private user documents), test artifacts — verified zero .env files tracked
