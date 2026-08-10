@@ -21,6 +21,9 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v2.3 update)
+- Hero3D reliability fix: removed drei Environment preset (external HDR CDN dependency that could leave the scene invisible); solid physical materials + pure light rig — verified rendering in headless + normal browsers
+
 ## Implemented (June 2026 — v2.2 update)
 - Deploy-blocker sweep: CORS now mirrors any origin with credentials (allow_origin_regex when CORS_ORIGINS='*') so the production domain works; deployment_agent final status: PASS, zero blockers
 - Deployment path decided: Emergent one-click Deploy (user to click); Vercel-only hosting rejected (frontend-only, needs Render+Atlas split) — DEPLOYMENT.md kept as manual fallback guide
