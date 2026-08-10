@@ -21,6 +21,11 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.7 update)
+- Emergent-managed Google sign-in added alongside JWT auth: "Continue with Google" on /login + /register → auth.emergentagent.com → AuthCallback (synchronous useLocation().hash detection) → POST /api/auth/google/session (server-side Emergent session-data verification) → user_sessions collection + httpOnly session_token cookie (7d)
+- get_current_user now accepts JWT cookie, session_token cookie, or Bearer (JWT or session token); gamingsteam2003@gmail.com via Google gets admin role; Google users have no password (password login guarded)
+- Testing agent iteration_3: 9/9 backend + 12/12 frontend checks pass, JWT regression unaffected
+
 ## Implemented (June 2026 — v1.6 update)
 - Fixed FAILED production deploy: root cause was @react-three/drei (camera-controls) requiring Node >=22 while build image runs Node 20 → added frontend/.yarnrc with --install.ignore-engines true; yarn install (exact Docker flags) + yarn build both verified passing
 - Fixed deployment-agent blockers: quoted frontend/.env values with spaces; added projections + limits to admin stats/analytics queries; CORS now honors CORS_ORIGINS env
