@@ -21,6 +21,12 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.3 update)
+- ALL demo/sample/test data wiped: only admin user remains; first real application will be FE-2026-00001
+- Demo customer seeding now gated behind SEED_SAMPLE_DATA env flag (set "false"); demo@formease.in removed
+- Deployment readiness check: PASS (no blockers, env-based config throughout)
+- NOTE: payments still require the simulated checkout until user registers Razorpay (no keys yet) — everything else is fully real (real emails via managed Resend, real DB, real tracking)
+
 ## Implemented (June 2026 — v1.2 update)
 - Fixed navbar hash links (Services / How It Works / Contact now smooth-scroll from any page)
 - Contact cards are clickable: tel:, mailto:, and wa.me/918119933128 links; floating WhatsApp chat button added site-wide on landing

@@ -800,7 +800,7 @@ async def seed_admin():
 
 
 async def seed_demo_data():
-    if not DEMO_MODE:
+    if os.environ.get("SEED_SAMPLE_DATA", "false").lower() != "true":
         return
     if await db.users.find_one({"email": "demo@formease.in"}) is None:
         await db.users.insert_one({"name": "Demo Customer", "email": "demo@formease.in",
