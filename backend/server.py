@@ -122,27 +122,50 @@ def public_user(user: dict) -> dict:
             "created_at": user.get("created_at")}
 
 
+async def _user_from_session_token(session_token: str):
+    if not session_token:
+        return None
+    sess = await db.user_sessions.find_one({"session_token": session_token})
+    if not sess:
+        return None
+    expires_at = sess["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= datetime.now(timezone.utc):
+        return None
+    from bson import ObjectId
+    return await db.users.find_one({"_id": ObjectId(sess["user_id"])})
+
+
 async def get_current_user(request: Request) -> dict:
     token = request.cookies.get("access_token")
+    auth_header = request.headers.get("Authorization", "")
+    bearer = auth_header[7:] if auth_header.startswith("Bearer ") else None
     if not token:
-        auth_header = request.headers.get("Authorization", "")
-        if auth_header.startswith("Bearer "):
-            token = auth_header[7:]
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    try:
-        payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
-        if payload.get("type") != "access":
-            raise HTTPException(status_code=401, detail="Invalid token type")
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    from bson import ObjectId
-    user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    return user
+        token = bearer
+    if token:
+        try:
+            payload = jwt.decode(token, get_jwt_secret(), algorithms=[JWT_ALGORITHM])
+            if payload.get("type") != "access":
+                raise HTTPException(status_code=401, detail="Invalid token type")
+            from bson import ObjectId
+            user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
+            if not user:
+                raise HTTPException(status_code=401, detail="User not found")
+            return user
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Session expired. Please log in again.")
+        except jwt.InvalidTokenError:
+            user = await _user_from_session_token(token)
+            if user:
+                return user
+            raise HTTPException(status_code=401, detail="Invalid token")
+    user = await _user_from_session_token(request.cookies.get("session_token") or bearer)
+    if user:
+        return user
+    raise HTTPException(status_code=401, detail="Not authenticated")
 
 
 async def require_admin(user: dict = Depends(get_current_user)) -> dict:
@@ -191,7 +214,7 @@ async def login(body: LoginBody, request: Request, response: Response):
         if locked_until and locked_until > now_iso():
             raise HTTPException(429, "Too many failed attempts. Try again in 15 minutes.")
     user = await db.users.find_one({"email": email})
-    if not user or not verify_password(body.password, user["password_hash"]):
+    if not user or not user.get("password_hash") or not verify_password(body.password, user["password_hash"]):
         await db.login_attempts.update_one(
             {"identifier": identifier},
             {"$inc": {"count": 1}, "$set": {"locked_until": (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()}},
@@ -203,10 +226,59 @@ async def login(body: LoginBody, request: Request, response: Response):
 
 
 @api.post("/auth/logout")
-async def logout(response: Response):
+async def logout(request: Request, response: Response):
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        await db.user_sessions.delete_one({"session_token": session_token})
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
+    response.delete_cookie("session_token", path="/")
     return {"ok": True}
+
+
+@api.post("/auth/google/session")
+async def google_session(body: dict, response: Response):
+    session_id = body.get("session_id", "")
+    if not session_id:
+        raise HTTPException(400, "Missing session_id")
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=15) as http_client:
+            r = await http_client.get(
+                "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+                headers={"X-Session-ID": session_id})
+    except Exception as e:
+        logger.error(f"Google session-data call failed: {e}")
+        raise HTTPException(502, "Could not verify Google sign-in")
+    if r.status_code != 200:
+        raise HTTPException(401, "Google sign-in verification failed")
+    data = r.json()
+    email = data["email"].lower().strip()
+    name = data.get("name") or email.split("@")[0]
+    picture = data.get("picture", "")
+    admin_email = os.environ.get("ADMIN_EMAIL", "").lower()
+    user = await db.users.find_one({"email": email})
+    if user:
+        updates = {"name": name, "picture": picture}
+        if email == admin_email and user.get("role") != "admin":
+            updates["role"] = "admin"
+        await db.users.update_one({"_id": user["_id"]}, {"$set": updates})
+        user.update(updates)
+    else:
+        doc = {"name": name, "email": email, "phone": "", "password_hash": None,
+               "role": "admin" if email == admin_email else "customer",
+               "picture": picture, "auth_provider": "google", "created_at": now_iso()}
+        result = await db.users.insert_one(doc)
+        doc["_id"] = result.inserted_id
+        user = doc
+    session_token = data["session_token"]
+    await db.user_sessions.insert_one({
+        "user_id": str(user["_id"]), "session_token": session_token,
+        "expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
+        "created_at": now_iso()})
+    response.set_cookie("session_token", session_token, httponly=True, secure=True,
+                        samesite="none", max_age=604800, path="/")
+    return public_user(user)
 
 
 @api.get("/auth/me")
