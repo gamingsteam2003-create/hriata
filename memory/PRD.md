@@ -21,6 +21,11 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.2 update)
+- Fixed navbar hash links (Services / How It Works / Contact now smooth-scroll from any page)
+- Contact cards are clickable: tel:, mailto:, and wa.me/918119933128 links; floating WhatsApp chat button added site-wide on landing
+- Verified via browser automation: nav scrolls, track page + result timeline, legal pages, admin UI login → /admin dashboard with stats + charts
+
 ## Implemented (June 2026 — v1.1 update)
 - Contact details set to real values: phone/WhatsApp +91 81199 33128, email gamingsteam2003@gmail.com (frontend/.env)
 - Footer credit: "Created & developed by hriata_khuptong"

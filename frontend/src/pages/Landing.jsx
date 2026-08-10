@@ -1,5 +1,5 @@
-import { lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, CreditCard, ClipboardList, GraduationCap, IdCard, Car,
@@ -38,6 +38,20 @@ function HeroFallback() {
 }
 
 export default function Landing() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const t = setTimeout(() => {
+        document.querySelector(location.hash)?.scrollIntoView({ behavior: "smooth" });
+      }, 150);
+      return () => clearTimeout(t);
+    }
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  const whatsappNumber = (process.env.REACT_APP_CONTACT_WHATSAPP || "").replace(/\D/g, "");
+
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768
     && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -210,23 +224,41 @@ export default function Landing() {
           </motion.div>
           <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { icon: Phone, label: "Phone", value: process.env.REACT_APP_CONTACT_PHONE, testid: "contact-phone" },
-              { icon: Mail, label: "Email", value: process.env.REACT_APP_CONTACT_EMAIL, testid: "contact-email" },
-              { icon: MessageCircle, label: "WhatsApp", value: process.env.REACT_APP_CONTACT_WHATSAPP, testid: "contact-whatsapp" },
+              { icon: Phone, label: "Phone", value: process.env.REACT_APP_CONTACT_PHONE, testid: "contact-phone", href: `tel:${(process.env.REACT_APP_CONTACT_PHONE || "").replace(/\s/g, "")}` },
+              { icon: Mail, label: "Email", value: process.env.REACT_APP_CONTACT_EMAIL, testid: "contact-email", href: `mailto:${process.env.REACT_APP_CONTACT_EMAIL}` },
+              { icon: MessageCircle, label: "WhatsApp", value: process.env.REACT_APP_CONTACT_WHATSAPP, testid: "contact-whatsapp", href: `https://wa.me/${whatsappNumber}`, external: true },
               { icon: Clock, label: "Business Hours", value: process.env.REACT_APP_BUSINESS_HOURS, testid: "contact-hours" },
-            ].map((c) => (
-              <div key={c.label} data-testid={c.testid}
-                className="bg-white rounded-2xl border border-slate-100 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                <span className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
-                  <c.icon className="w-5 h-5 text-royal" />
-                </span>
-                <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">{c.label}</p>
-                <p className="mt-1.5 text-sm font-semibold text-slate-800">{c.value}</p>
-              </div>
-            ))}
+            ].map((c) => {
+              const inner = (
+                <>
+                  <span className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mb-4">
+                    <c.icon className="w-5 h-5 text-royal" />
+                  </span>
+                  <p className="text-xs uppercase tracking-wider font-semibold text-slate-400">{c.label}</p>
+                  <p className="mt-1.5 text-sm font-semibold text-slate-800">{c.value}</p>
+                  {c.href && <p className="mt-1 text-xs font-medium text-royal">{c.external ? "Chat now" : "Tap to connect"}</p>}
+                </>
+              );
+              const cls = "block bg-white rounded-2xl border border-slate-100 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1 transition-[box-shadow,transform] duration-300";
+              return c.href ? (
+                <a key={c.label} href={c.href} data-testid={c.testid} className={cls}
+                  {...(c.external ? { target: "_blank", rel: "noreferrer" } : {})}>
+                  {inner}
+                </a>
+              ) : (
+                <div key={c.label} data-testid={c.testid} className={cls}>{inner}</div>
+              );
+            })}
           </div>
         </div>
       </section>
+
+      {/* Floating WhatsApp button */}
+      <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" data-testid="whatsapp-float-btn"
+        aria-label="Chat with us on WhatsApp"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-500 shadow-xl shadow-emerald-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform">
+        <MessageCircle className="w-7 h-7 text-white" />
+      </a>
 
       <Footer />
     </div>
