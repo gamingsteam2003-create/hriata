@@ -21,6 +21,9 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.9 update)
+- Re-verified complete email/password auth flow live (8/8 checks): register, login (httpOnly access+refresh cookies), /auth/me, wrong-password 401, forgot-password reset link, reset-password, login with new password, logout. No new code needed — feature existed since v1.
+
 ## Implemented (June 2026 — v1.8 update)
 - Migrated document storage from local disk to Emergent managed object storage: uploads → formease/uploads/{app_id}/{uuid}.{ext}, downloads proxied through authenticated backend (owner/admin only), soft-delete (DB reference drop), startup init with 404 force-reinit retry
 - Testing agent iteration_4: 10/10 new object-storage tests pass + full UI E2E (register → wizard → upload → preview → replace → demo payment → admin document view) pass; byte-identical downloads verified; 401/403 access control verified
