@@ -374,7 +374,7 @@ async def create_application(body: CreateApplicationBody, user: dict = Depends(g
 
 @api.get("/applications/mine")
 async def my_applications(user: dict = Depends(get_current_user)):
-    cursor = db.applications.find({"user_id": str(user["_id"])}).sort("created_at", -1)
+    cursor = db.applications.find({"user_id": str(user["_id"])}).sort("created_at", -1).limit(100)
     return [serialize(a) async for a in cursor]
 
 
@@ -614,12 +614,12 @@ async def admin_stats(admin: dict = Depends(require_admin)):
     pending = await db.applications.count_documents({"status": {"$in": ["submitted", "documents_under_review", "need_more_info"]}})
     processing = await db.applications.count_documents({"status": "processing"})
     completed = await db.applications.count_documents({"status": "completed"})
-    paid = [p async for p in db.payments.find({"status": "paid"})]
+    paid = [p async for p in db.payments.find({"status": "paid"}, {"amount": 1, "verified_at": 1, "application_id": 1}).limit(10000)]
     total_revenue = sum(p["amount"] for p in paid) // 100
     today_revenue = sum(p["amount"] for p in paid if p.get("verified_at", "") >= today) // 100
     month_revenue = sum(p["amount"] for p in paid if p.get("verified_at", "") >= month) // 100
     by_service = {}
-    apps = [a async for a in db.applications.find(base)]
+    apps = [a async for a in db.applications.find(base, {"service_type": 1, "application_id": 1}).limit(10000)]
     paid_app_ids = {p["application_id"] for p in paid}
     for a in apps:
         s = SERVICES[a["service_type"]]
@@ -746,8 +746,8 @@ async def admin_document_action(application_id: str, doc_type: str, body: dict,
 @api.get("/admin/analytics")
 async def admin_analytics(admin: dict = Depends(require_admin)):
     since = (datetime.now(timezone.utc) - timedelta(days=29)).date().isoformat()
-    apps = [a async for a in db.applications.find({"status": {"$ne": "draft"}})]
-    paid = [p async for p in db.payments.find({"status": "paid"})]
+    apps = [a async for a in db.applications.find({"status": {"$ne": "draft"}}, {"created_at": 1, "service_type": 1, "status": 1}).limit(10000)]
+    paid = [p async for p in db.payments.find({"status": "paid"}, {"verified_at": 1, "amount": 1}).limit(10000)]
     days = [(datetime.now(timezone.utc).date() - timedelta(days=i)).isoformat() for i in range(29, -1, -1)]
     apps_over_time = [{"date": d[5:], "count": sum(1 for a in apps if a["created_at"][:10] == d)} for d in days]
     revenue_over_time = [{"date": d[5:], "revenue": sum(p["amount"] for p in paid if p.get("verified_at", "")[:10] == d) // 100} for d in days]
