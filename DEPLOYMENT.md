@@ -105,6 +105,27 @@ Your repo `hriata` is a few commits behind. In the Emergent interface: project m
 
 ---
 
+## STEP 6 — Connect your Hostinger domain (paid domain, free hosting)
+
+Your app runs free on Vercel + Render; the Hostinger domain just points to them via DNS. (Note: Hostinger's shared web-hosting plans cannot run this app — Python backends need a VPS. Using the domain with Vercel/Render is cheaper and easier.)
+
+Assume your domain is `yourdomain.com`:
+
+1. **Vercel (website):** Vercel project → **Settings → Domains** → Add `yourdomain.com` and `www.yourdomain.com`. Vercel will show you the records it needs:
+   - In **Hostinger → Domains → yourdomain.com → DNS / Name Servers → DNS records**, add:
+     - `A` record: host `@` → `76.76.21.21`
+     - `CNAME` record: host `www` → `cname.vercel-dns.com`
+   - Keep Hostinger's default nameservers (don't change them).
+2. **Render (backend) — give the API its own subdomain:** Render service → **Settings → Custom Domains** → Add `api.yourdomain.com` → it shows a CNAME target.
+   - In Hostinger DNS add: `CNAME` record: host `api` → `formease-api.onrender.com` (your actual Render hostname).
+3. **Update env vars to the final domain:**
+   - Render → `FRONTEND_URL` = `https://yourdomain.com`
+   - Vercel → `REACT_APP_BACKEND_URL` = `https://api.yourdomain.com` → then **Redeploy** (Vercel: Deployments → ⋯ → Redeploy) so the frontend rebuilds with the new API URL.
+4. Wait 5–30 minutes for DNS to propagate. HTTPS certificates are issued automatically by both Vercel and Render.
+5. Test: `https://yourdomain.com` (website) and `https://api.yourdomain.com/api/` (should return the FormEase API JSON).
+
+---
+
 ## Troubleshooting
 
 - **Login works but data doesn't load / CORS errors:** Step 4 wasn't done — `FRONTEND_URL` on Render must exactly match your Vcel URL.
