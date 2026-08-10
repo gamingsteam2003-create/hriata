@@ -989,12 +989,12 @@ async def security_headers(request: Request, call_next):
 app.include_router(api)
 
 frontend_url = os.environ.get("FRONTEND_URL", "http://localhost:3000")
-cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "").split(",") if o.strip() and o.strip() != "*"]
-allow_origins = list(dict.fromkeys([frontend_url, "http://localhost:3000", *cors_origins]))
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+cors_origins_env = os.environ.get("CORS_ORIGINS", "").strip()
+cors_kwargs = {"allow_credentials": True, "allow_methods": ["*"], "allow_headers": ["*"]}
+if cors_origins_env == "*":
+    # Echo any origin (Starlette mirrors Origin when credentials are allowed) so preview AND production domains both work
+    app.add_middleware(CORSMiddleware, allow_origin_regex=".*", **cors_kwargs)
+else:
+    allow_origins = list(dict.fromkeys([frontend_url, "http://localhost:3000",
+                                        *[o.strip() for o in cors_origins_env.split(",") if o.strip()]]))
+    app.add_middleware(CORSMiddleware, allow_origins=allow_origins, **cors_kwargs)
