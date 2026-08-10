@@ -21,6 +21,9 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v2.1 update)
+- Per-service pricing: Scholarship ₹100, PAN ₹100, Learner's Licence ₹350 — amounts computed server-side (SERVICE_FEES_PAISE), real Razorpay orders confirmed at 10000/10000/35000 paise; all UI surfaces updated (cards, wizard, review, success, track, dashboard, admin, legal pages)
+
 ## Implemented (June 2026 — v2.0 update)
 - LIVE Razorpay payments enabled (test keys rzp_test_TO39EamDLKLtWI): create-order now creates real Razorpay orders (25000 paise), demo payment path auto-disabled, server-side signature verification enforced (fake signatures rejected 400). Frontend loads real Razorpay checkout.js. Set RAZORPAY_WEBHOOK_SECRET later for webhook hardening; swap to rzp_live keys for production.
 
