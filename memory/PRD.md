@@ -21,6 +21,12 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v1.1 update)
+- Contact details set to real values: phone/WhatsApp +91 81199 33128, email gamingsteam2003@gmail.com (frontend/.env)
+- Footer credit: "Created & developed by hriata_khuptong"
+- REAL email notifications live via Emergent-managed Resend proxy (EMERGENT_EMAIL_KEY in backend/.env, EMAIL_FROM_NAME=FormEase) — verified "sent" to gamingsteam2003@gmail.com on new application; WhatsApp remains mocked (user opted out of WhatsApp API)
+- Razorpay remains Demo Mode (user not registered yet)
+
 ## Implemented (June 2026 — v1, all tested 21/21 backend + frontend smoke pass)
 - Premium landing: 3D hero (floating documents/ID card/shield/checkmark, mouse parallax, mobile CSS fallback), trust section, 3 service cards, how-it-works, contact (env-driven placeholders), footer with legal disclaimer
 - Sticky translucent navbar + mobile drawer

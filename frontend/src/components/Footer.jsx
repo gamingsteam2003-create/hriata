@@ -46,6 +46,7 @@ export default function Footer() {
             with the Income Tax Department, Parivahan, any state government or any scholarship authority.
           </p>
           <p className="text-xs text-slate-500 mt-4">© {new Date().getFullYear()} FormEase. All rights reserved.</p>
+          <p className="text-xs text-slate-500 mt-2" data-testid="footer-credit">Created &amp; developed by <span className="text-slate-300 font-semibold">hriata_khuptong</span></p>
         </div>
       </div>
     </footer>

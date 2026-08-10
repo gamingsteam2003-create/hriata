@@ -283,14 +283,30 @@ async def send_notification(channel: str, ntype: str, recipient: str, message: s
         except Exception as e:
             logger.error(f"WhatsApp send failed: {e}")
             status = "failed"
-    elif channel == "email" and os.environ.get("RESEND_API_KEY"):
+    elif channel == "email" and os.environ.get("EMERGENT_EMAIL_KEY"):
         try:
-            import requests as req
-            r = req.post("https://api.resend.com/emails",
-                         headers={"Authorization": f"Bearer {os.environ['RESEND_API_KEY']}"},
-                         json={"from": "FormEase <noreply@formease.in>", "to": [recipient],
-                               "subject": message.split("\n")[0], "text": message}, timeout=10)
-            status = "sent" if r.ok else "failed"
+            import httpx
+            lines = message.split("\n")
+            subject = lines[0][:120]
+            body_html = "".join(
+                f'<p style="margin:0 0 12px;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#334155">{line}</p>'
+                for line in lines[1:] if line.strip())
+            html = (
+                '<div style="max-width:560px;margin:0 auto;padding:24px;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px">'
+                '<p style="margin:0 0 16px;font-family:Arial,sans-serif;font-size:18px;font-weight:bold;color:#0A192F">FormEase</p>'
+                + body_html +
+                '<hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0"/>'
+                '<p style="margin:0;font-family:Arial,sans-serif;font-size:11px;color:#94a3b8">FormEase is an independent application assistance service and is not a government website or authority.</p></div>')
+            async with httpx.AsyncClient(timeout=30) as http_client:
+                r = await http_client.post(
+                    "https://integrations.emergentagent.com/api/v1/email/send",
+                    headers={"X-Email-Key": os.environ["EMERGENT_EMAIL_KEY"]},
+                    json={"to": [recipient], "subject": subject, "html": html,
+                          "from_name": os.environ.get("EMAIL_FROM_NAME", "FormEase"),
+                          "contact_email": os.environ.get("ADMIN_NOTIFY_EMAIL", "")})
+            status = "sent" if r.status_code in (200, 202) else "failed"
+            if status == "failed":
+                logger.error(f"Email send failed: {r.status_code} {r.text}")
         except Exception as e:
             logger.error(f"Email send failed: {e}")
             status = "failed"
