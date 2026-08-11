@@ -19,7 +19,10 @@ from pydantic import BaseModel, EmailStr
 
 ROOT_DIR = Path(__file__).parent
 UPLOAD_DIR = ROOT_DIR / "uploads"
-UPLOAD_DIR.mkdir(exist_ok=True)
+try:
+    UPLOAD_DIR.mkdir(exist_ok=True)
+except OSError:
+    pass  # read-only filesystem (serverless); documents live in object storage anyway
 
 # ---- Emergent object storage ----
 import asyncio
