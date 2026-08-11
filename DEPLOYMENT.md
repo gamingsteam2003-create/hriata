@@ -1,5 +1,42 @@
 # FormEase — FREE Permanent Website Guide (No Credit Card, No Tokens)
 
+## OPTION A — Vercel-only (simplest: just Vercel + MongoDB Atlas)
+
+The repo is pre-configured (`vercel.json` at root): Vercel hosts the website AND runs the FastAPI backend as serverless functions on the same domain. You only need **2 accounts**: Vercel (GitHub sign-in) and MongoDB Atlas (Google sign-in).
+
+1. **Atlas (database):** cloud.mongodb.com → Google sign-in → M0 Free cluster → create DB user → Network Access → allow `0.0.0.0/0` → copy connection string (your `MONGO_URL`)
+2. **Vercel:** vercel.com → GitHub sign-in → **Add New → Project** → import `hriata` → leave Root Directory as **repository root** (NOT `frontend` — the root vercel.json handles everything)
+3. **Environment Variables** on Vercel (add all before deploying):
+
+   | Key | Value |
+   |---|---|
+   | `MONGO_URL` | your Atlas connection string |
+   | `DB_NAME` | `formease` |
+   | `JWT_SECRET` | any long random string |
+   | `ADMIN_EMAIL` | `gamingsteam2003@gmail.com` |
+   | `ADMIN_PASSWORD` | your strong admin password |
+   | `FRONTEND_URL` | leave for now; after deploy set to your Vercel URL and redeploy |
+   | `CORS_ORIGINS` | `*` |
+   | `DEMO_MODE` | `true` |
+   | `SEED_SAMPLE_DATA` | `false` |
+   | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | your Razorpay keys |
+   | `EMERGENT_LLM_KEY` | from Emergent backend/.env (document storage) |
+   | `EMERGENT_EMAIL_KEY` | from Emergent backend/.env (real emails) |
+   | `EMAIL_FROM_NAME` | `FormEase` |
+   | `ADMIN_NOTIFY_EMAIL` | `gamingsteam2003@gmail.com` |
+   | `REACT_APP_BACKEND_URL` | *(empty string — frontend calls /api on the same domain)* |
+
+4. **Deploy** → ~3 minutes → you get `https://<name>.vercel.app` — website + API together.
+5. Set `FRONTEND_URL` to that URL in Vercel env vars → **Redeploy** (Deployments → ⋯ → Redeploy).
+6. Test: open the URL, register, apply, pay with test card `4111 1111 1111 1111`.
+7. **Hostinger domain:** Vercel project → Settings → Domains → add your domain → in Hostinger DNS add the `A` record (`@` → `76.76.21.21`) and `CNAME` (`www` → `cname.vercel-dns.com`). SSL is automatic.
+
+Notes for Option A: backend runs as serverless functions (brief cold start after idle is normal). File uploads are safe — they go to object storage, not Vercel's disk. Skip Option B below (it's the alternative 3-platform route).
+
+---
+
+## OPTION B — Vercel (frontend) + Render (backend) + Atlas
+
 You will create 3 free accounts. Each one signs up with a single click using accounts you already have:
 
 | Service | Hosts | Sign up with | Free tier |

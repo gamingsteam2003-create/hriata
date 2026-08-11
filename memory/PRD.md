@@ -21,6 +21,9 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 - Documents on disk (`backend/uploads/`), served only via authenticated endpoints
 - Atomic counter collection for Application IDs; audit_logs, notifications, payments, login_attempts, password_reset_tokens collections
 
+## Implemented (June 2026 — v2.4 update)
+- Vercel-only deployment prepared: root vercel.json (CRA static build + FastAPI as @vercel/python serverless at /api/*), api/index.py ASGI entry (verified importing full app with all routes), slim api/requirements.txt, DEPLOYMENT.md Option A (2 platforms: Vercel + Atlas). REACT_APP_BACKEND_URL should be empty string on Vercel (same-origin /api).
+
 ## Implemented (June 2026 — v2.3 update)
 - Hero3D reliability fix: removed drei Environment preset (external HDR CDN dependency that could leave the scene invisible); solid physical materials + pure light rig — verified rendering in headless + normal browsers
 
