@@ -30,7 +30,7 @@ export default function AuthCallback() {
         toast.error(formatApiError(e, "Google sign-in failed"));
         navigate("/login", { replace: true });
       });
-  }, []);
+  }, [navigate, setUser]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50" data-testid="auth-callback-loading">

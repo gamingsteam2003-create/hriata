@@ -139,7 +139,7 @@ export default function Apply() {
         if (data.status !== "draft") setStep(6);
       })
       .catch((e) => setLoadError(formatApiError(e)));
-  }, [serviceKey]);
+  }, [serviceKey, service]);
 
   const docs = useMemo(() => application?.documents || [], [application]);
   const docFor = (key) => docs.find((d) => d.doc_type === key);
