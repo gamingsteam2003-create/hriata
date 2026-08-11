@@ -41,6 +41,13 @@ backend/uploads/
 # Test artifacts
 test_reports/
 
+# Internal project files (may contain credentials notes)
+memory/
+test_reports/
+test_result.md
+auth_testing.md
+design_guidelines.json
+
 *token.json*
 *credentials.json*
 
