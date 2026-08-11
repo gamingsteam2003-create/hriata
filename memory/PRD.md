@@ -23,7 +23,7 @@ Premium 3D online application assistance platform ("FormEase — Your Forms. Sim
 
 ## Implemented (June 2026 — v2.4 update)
 - Vercel-only deployment prepared: root vercel.json (CRA static build + FastAPI as @vercel/python serverless at /api/*), api/index.py ASGI entry (verified importing full app with all routes), slim api/requirements.txt, DEPLOYMENT.md Option A (2 platforms: Vercel + Atlas). REACT_APP_BACKEND_URL should be empty string on Vercel (same-origin /api).
-- Vercel build fix: CI=true turns ESLint warnings into errors — fixed exhaustive-deps warnings in Apply.jsx/AuthCallback.jsx + set build.env CI=false in vercel.json as safety; verified CI=true yarn build passes
+- Vercel build fix: CI=true turns ESLint warnings into errors — fixed exhaustive-deps warnings in Apply.jsx/AuthCallback.jsx + set build.env CI=false in vercel.json as safety; verified CI=true yarn build passes (note: local node_modules/.cache held stale eslint results — cleared)
 
 ## Implemented (June 2026 — v2.3 update)
 - Hero3D reliability fix: removed drei Environment preset (external HDR CDN dependency that could leave the scene invisible); solid physical materials + pure light rig — verified rendering in headless + normal browsers
