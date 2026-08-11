@@ -41,6 +41,9 @@ backend/uploads/
 # Test artifacts
 test_reports/
 
+# Vercel local link
+.vercel
+
 # Internal project files (may contain credentials notes)
 memory/
 test_reports/
@@ -109,3 +112,4 @@ credentials.json
 .credentials
 frontend/node_modules/.cache/default-development/8.pack
 frontend/node_modules/.cache/default-development/7.pack
+.env*

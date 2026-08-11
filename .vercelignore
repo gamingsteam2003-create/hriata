@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+**/.env
+backend/uploads
+.git
+memory
+test_reports
+tests
+scripts
+*.log
+.emergent
+frontend/build

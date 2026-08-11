@@ -69,7 +69,7 @@ def get_object(path: str):
     return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
 
 mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000)
 db = client[os.environ["DB_NAME"]]
 
 logger = logging.getLogger("formease")
@@ -893,9 +893,18 @@ async def root():
     return {"message": "FormEase API", "demo_mode": DEMO_MODE}
 
 
+@app.get("/api/debug/db")  # TEMP: remove after Vercel verification
+async def debug_db():
+    try:
+        probe = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
+        await probe.admin.command("ping")
+        return {"db": "OK"}
+    except Exception as e:
+        return {"db": "FAILED", "error": f"{type(e).__name__}: {str(e)[:300]}"}
+
+
 @api.get("/config")
-async def public_config():
-    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
+async def public_config():    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
             "doc_specs": DOC_SPECS, "payments_mode": "live" if PAYMENTS_LIVE else "demo",
             "demo_mode": DEMO_MODE, "max_upload_mb": int(os.environ.get("MAX_UPLOAD_MB", "5"))}
 
@@ -960,6 +969,13 @@ async def seed_demo_data():
 
 @app.on_event("startup")
 async def startup():
+    try:
+        await asyncio.wait_for(_startup_inner(), timeout=10)
+    except Exception as e:
+        logger.error(f"Startup init failed (non-fatal): {e}")
+
+
+async def _startup_inner():
     await db.users.create_index("email", unique=True)
     await db.applications.create_index("application_id", unique=True)
     await db.applications.create_index("user_id")
