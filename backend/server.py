@@ -893,16 +893,6 @@ async def root():
     return {"message": "FormEase API", "demo_mode": DEMO_MODE}
 
 
-@app.get("/api/debug/db")  # TEMP: remove after Vercel verification
-async def debug_db():
-    try:
-        probe = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=5000)
-        await probe.admin.command("ping")
-        return {"db": "OK"}
-    except Exception as e:
-        return {"db": "FAILED", "error": f"{type(e).__name__}: {str(e)[:300]}"}
-
-
 @api.get("/config")
 async def public_config():    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
             "doc_specs": DOC_SPECS, "payments_mode": "live" if PAYMENTS_LIVE else "demo",
