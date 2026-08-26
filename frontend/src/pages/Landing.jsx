@@ -258,7 +258,7 @@ export default function Landing() {
       <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" data-testid="whatsapp-float-btn"
         aria-label="Chat with us on WhatsApp"
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-500 shadow-xl shadow-emerald-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform">
-        <MessageCircle className="w-7 h-7 text-white" />
+       <WhatsAppIcon className="w-5 h-5 text-emerald-500" />
       </a>
 
       <Footer />
