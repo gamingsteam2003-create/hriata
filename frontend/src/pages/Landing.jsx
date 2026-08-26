@@ -4,7 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ShieldCheck, CreditCard, ClipboardList, GraduationCap, IdCard, Car,
-  ArrowRight, CheckCircle2, Phone, Mail, MessageCircle, Clock, FileEdit,
+  ArrowRight, CheckCircle2, Phone, Mail, Clock, FileEdit,
   UploadCloud, BadgeCheck, Lock
 } from "lucide-react";
 import Navbar from "../components/Navbar";
@@ -40,7 +40,6 @@ function HeroFallback() {
 
 export default function Landing() {
   const location = useLocation();
-
   useEffect(() => {
     if (location.hash) {
       const t = setTimeout(() => {
@@ -52,14 +51,12 @@ export default function Landing() {
   }, [location]);
 
   const whatsappNumber = (process.env.REACT_APP_CONTACT_WHATSAPP || "").replace(/\D/g, "");
-
   const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768
     && !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 to-white" data-testid="hero-section">
         <div className="absolute inset-0 opacity-[0.35] pointer-events-none"
@@ -108,7 +105,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* TRUST */}
       <section className="py-24 bg-white" data-testid="trust-section">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
@@ -135,7 +131,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* SERVICES */}
       <section id="services" className="py-24 bg-slate-50" data-testid="services-section">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
@@ -172,7 +167,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="py-24 bg-white" data-testid="how-it-works-section">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
@@ -200,7 +194,6 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* CTA BANNER */}
       <section className="py-20 bg-navy-deep" data-testid="cta-banner">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col md:flex-row md:items-center md:justify-between gap-8">
@@ -214,7 +207,6 @@ export default function Landing() {
           </Link>
         </div>
       </section>
-
       {/* CONTACT */}
       <section id="contact" className="py-24 bg-slate-50" data-testid="contact-section">
         <div className="max-w-7xl mx-auto px-5 sm:px-8">
@@ -227,7 +219,7 @@ export default function Landing() {
             {[
               { icon: Phone, label: "Phone", value: process.env.REACT_APP_CONTACT_PHONE, testid: "contact-phone", href: `tel:${(process.env.REACT_APP_CONTACT_PHONE || "").replace(/\s/g, "")}` },
               { icon: Mail, label: "Email", value: process.env.REACT_APP_CONTACT_EMAIL, testid: "contact-email", href: `mailto:${process.env.REACT_APP_CONTACT_EMAIL}` },
-              { icon: MessageCircle, label: "WhatsApp", value: process.env.REACT_APP_CONTACT_WHATSAPP, testid: "contact-whatsapp", href: `https://wa.me/${whatsappNumber}`, external: true },
+              { icon: WhatsAppIcon, label: "WhatsApp", value: process.env.REACT_APP_CONTACT_WHATSAPP, testid: "contact-whatsapp", href: `https://wa.me/${whatsappNumber}`, external: true },
               { icon: Clock, label: "Business Hours", value: process.env.REACT_APP_BUSINESS_HOURS, testid: "contact-hours" },
             ].map((c) => {
               const inner = (
@@ -253,14 +245,12 @@ export default function Landing() {
           </div>
         </div>
       </section>
-
       {/* Floating WhatsApp button */}
       <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noreferrer" data-testid="whatsapp-float-btn"
         aria-label="Chat with us on WhatsApp"
         className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full bg-emerald-500 shadow-xl shadow-emerald-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform">
-       <WhatsAppIcon className="w-5 h-5 text-emerald-500" />
+        <WhatsAppIcon className="w-7 h-7 text-white" />
       </a>
-
       <Footer />
     </div>
   );
