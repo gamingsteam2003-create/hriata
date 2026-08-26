@@ -10,18 +10,19 @@ import Navbar from "../components/Navbar";
 import FileUpload from "../components/FileUpload";
 import api, { formatApiError } from "../lib/api";
 import { SERVICES } from "../lib/services";
+import { INDIAN_STATES, filterName, validateFullName, validateEmail } from "../lib/validation";
 
 const STEPS = ["Personal Details", "Application Details", "Documents", "Review", "Payment", "Submitted"];
 
 const PERSONAL_FIELDS = [
-  { name: "full_name", label: "Full Name", required: true, placeholder: "As per official records" },
+  { name: "full_name", label: "Full Name", required: true, placeholder: "As per official records", filter: filterName, validate: validateFullName },
   { name: "dob", label: "Date of Birth", required: true, type: "date" },
   { name: "gender", label: "Gender", required: true, type: "select", options: ["Male", "Female", "Other"] },
   { name: "mobile", label: "Mobile Number", required: true, placeholder: "10-digit mobile number", maxLength: 10, pattern: /^\d{10}$/, patternMsg: "Enter a valid 10-digit mobile number" },
-  { name: "email", label: "Email", required: true, type: "email", placeholder: "you@example.com" },
+  { name: "email", label: "Email", required: true, type: "email", placeholder: "you@example.com", validate: validateEmail },
   { name: "address", label: "Address", required: true, type: "textarea", placeholder: "House / street / locality" },
   { name: "city", label: "City", required: true, placeholder: "City" },
-  { name: "state", label: "State", required: true, placeholder: "State" },
+  { name: "state", label: "State", required: true, type: "select", placeholder: "Select State", options: INDIAN_STATES },
   { name: "pin", label: "PIN Code", required: true, placeholder: "6-digit PIN", maxLength: 6, pattern: /^\d{6}$/, patternMsg: "Enter a valid 6-digit PIN code" },
 ];
 
@@ -38,7 +39,7 @@ function Field({ field, value, onChange, error }) {
         <select value={value || ""} onChange={(e) => onChange(field.name, e.target.value)}
           data-testid={`field-${field.name}`}
           className={`${inputCls} ${error ? errCls : ""} ${!value ? "text-slate-400" : ""}`}>
-          <option value="">Select {field.label}</option>
+          <option value="">{field.placeholder || `Select ${field.label}`}</option>
           {field.options.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
       ) : field.type === "textarea" ? (
@@ -46,7 +47,8 @@ function Field({ field, value, onChange, error }) {
           data-testid={`field-${field.name}`} placeholder={field.placeholder}
           className={`${inputCls} h-auto py-3 ${error ? errCls : ""}`} />
       ) : (
-        <input type={field.type || "text"} value={value || ""} onChange={(e) => onChange(field.name, e.target.value)}
+        <input type={field.type || "text"} value={value || ""}
+          onChange={(e) => onChange(field.name, field.filter ? field.filter(e.target.value) : e.target.value)}
           data-testid={`field-${field.name}`} placeholder={field.placeholder} maxLength={field.maxLength}
           className={`${inputCls} ${error ? errCls : ""}`} />
       )}
@@ -182,8 +184,8 @@ export default function Apply() {
     fields.forEach((f) => {
       const v = (form[f.name] || "").trim();
       if (f.required && !v) errs[f.name] = `${f.label} is required`;
+      else if (v && f.validate) { const m = f.validate(v); if (m) errs[f.name] = m; }
       else if (v && f.pattern && !f.pattern.test(v)) errs[f.name] = f.patternMsg;
-      else if (v && f.type === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) errs[f.name] = "Enter a valid email address";
     });
     setErrors(errs);
     return Object.keys(errs).length === 0;
