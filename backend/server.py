@@ -112,6 +112,43 @@ RAZORPAY_WEBHOOK_SECRET = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) if (RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET) else None
 PAYMENTS_LIVE = razorpay_client is not None
 
+# ---- Applicant field validation ----
+NAME_RE = re.compile(r"^[A-Za-z ]+$")
+EMAIL_RE = re.compile(
+    r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?"
+    r"(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$"
+)
+DISPOSABLE_DOMAINS = {
+    "mailinator.com", "10minutemail.com", "tempmail.com",
+    "guerrillamail.com", "yopmail.com", "trashmail.com",
+}
+INDIAN_STATES = {
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
+    "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala",
+    "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland",
+    "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
+    "Uttar Pradesh", "Uttarakhand", "West Bengal",
+    "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
+    "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+}
+
+
+def validate_applicant_data(data: dict):
+    """Validate only fields that are present (wizard saves partial data per step)."""
+    val = str(data.get("full_name", "")).strip()
+    if val and not NAME_RE.fullmatch(val):
+        raise HTTPException(400, "Name can contain letters and spaces only")
+    email = str(data.get("email", "")).strip()
+    if email:
+        if ".." in email or not EMAIL_RE.fullmatch(email):
+            raise HTTPException(400, "Enter a valid email address")
+        if email.split("@")[1].lower() in DISPOSABLE_DOMAINS:
+            raise HTTPException(400, "Please use a permanent email address")
+    state = str(data.get("state", "")).strip()
+    if state and state not in INDIAN_STATES:
+        raise HTTPException(400, "Please select a valid state")
+
 app = FastAPI(title="FormEase API")
 api = APIRouter(prefix="/api")
 
@@ -126,7 +163,6 @@ def serialize(doc):
     doc = dict(doc)
     doc["id"] = str(doc.pop("_id"))
     return doc
-
 
 # ---------------- Auth ----------------
 
@@ -381,7 +417,6 @@ async def reset_password(body: dict):
     await db.password_reset_tokens.update_one({"_id": rec["_id"]}, {"$set": {"used": True}})
     return {"ok": True}
 
-
 # ---------------- Notifications (mock-ready architecture) ----------------
 
 async def send_notification(channel: str, ntype: str, recipient: str, message: str, application_id: str = None):
@@ -455,7 +490,6 @@ async def notify_new_application(app_doc: dict):
                                 f"Track it anytime with your Application ID: {app_doc['application_id']}",
                                 app_doc["application_id"])
 
-
 # ---------------- Applications ----------------
 
 async def next_application_id() -> str:
@@ -521,6 +555,7 @@ async def update_application(application_id: str, body: dict, user: dict = Depen
     applicant_data = body.get("applicant_data", {})
     if not isinstance(applicant_data, dict):
         raise HTTPException(400, "Invalid data")
+    validate_applicant_data(applicant_data)
     clean = {k: (str(v)[:500] if isinstance(v, (str, int, float)) else v) for k, v in applicant_data.items()}
     await db.applications.update_one(
         {"_id": app_doc["_id"]},
@@ -544,7 +579,6 @@ async def track_application(application_id: str):
         "timeline": app_doc.get("status_history", []),
         "documents_count": len(app_doc.get("documents", [])),
     }
-
 
 # ---------------- Documents ----------------
 
@@ -615,7 +649,6 @@ async def get_document(application_id: str, stored_name: str, user: dict = Depen
         raise HTTPException(404, "File missing on storage")
     return Response(content=data, media_type=doc.get("content_type", content_type),
                     headers={"Content-Disposition": f'inline; filename="{doc["file_name"]}"'})
-
 
 # ---------------- Payments ----------------
 
@@ -712,7 +745,6 @@ async def payment_webhook(request: Request):
                                      {"$set": {"payment_id": entity.get("id"), "status": "paid",
                                                "verified_at": now_iso(), "webhook": True}})
     return {"status": "processed"}
-
 
 # ---------------- Admin ----------------
 
@@ -885,7 +917,6 @@ async def admin_notifications(admin: dict = Depends(require_admin)):
     cursor = db.notifications.find({}).sort("created_at", -1).limit(20)
     return [serialize(n) async for n in cursor]
 
-
 # ---------------- Config & health ----------------
 
 @api.get("/")
@@ -894,10 +925,10 @@ async def root():
 
 
 @api.get("/config")
-async def public_config():    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
+async def public_config():
+    return {"services": [{"key": k, "name": v, "fee": SERVICE_FEES_PAISE[k] // 100} for k, v in SERVICES.items()],
             "doc_specs": DOC_SPECS, "payments_mode": "live" if PAYMENTS_LIVE else "demo",
             "demo_mode": DEMO_MODE, "max_upload_mb": int(os.environ.get("MAX_UPLOAD_MB", "5"))}
-
 
 # ---------------- Startup: indexes + seeding ----------------
 
@@ -993,7 +1024,6 @@ async def security_headers(request: Request, call_next):
     resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     resp.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     return resp
-
 
 app.include_router(api)
 
