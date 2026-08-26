@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
+import WhatsAppIcon from "../components/WhatsAppIcon";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
