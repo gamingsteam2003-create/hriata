@@ -26,6 +26,8 @@ const PERSONAL_FIELDS = [
   { name: "pin", label: "PIN Code", required: true, placeholder: "6-digit PIN", maxLength: 6, pattern: /^\d{6}$/, patternMsg: "Enter a valid 6-digit PIN code" },
 ];
 
+const MIZORAM_CITIES = ["Aizawl", "Lunglei", "Champhai", "Siaha", "Kolasib", "Serchhip", "Lawngtlai", "Mamit"];
+
 const inputCls = "w-full h-12 rounded-xl border border-slate-200 bg-white px-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-[box-shadow,border-color]";
 const errCls = "border-red-300 focus:border-red-500 focus:ring-red-500/20";
 
@@ -131,7 +133,6 @@ export default function Apply() {
   const [showDemoPay, setShowDemoPay] = useState(false);
   const [paying, setPaying] = useState(false);
   const [loadError, setLoadError] = useState("");
-
   useEffect(() => {
     if (!service) return;
     api.post("/applications", { service_type: serviceKey })
@@ -142,10 +143,17 @@ export default function Apply() {
       })
       .catch((e) => setLoadError(formatApiError(e)));
   }, [serviceKey, service]);
-
   const docs = useMemo(() => application?.documents || [], [application]);
   const docFor = (key) => docs.find((d) => d.doc_type === key);
-
+  const personalFields = useMemo(
+    () =>
+      PERSONAL_FIELDS.map((f) =>
+        f.name === "city" && form.state === "Mizoram"
+          ? { ...f, type: "select", options: MIZORAM_CITIES, placeholder: "Select City", filter: undefined }
+          : f
+      ),
+    [form.state]
+  );
   if (!service) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -153,7 +161,6 @@ export default function Apply() {
       </div>
     );
   }
-
   if (loadError) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-5">
@@ -165,7 +172,6 @@ export default function Apply() {
       </div>
     );
   }
-
   if (!application) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center" data-testid="apply-loading">
@@ -173,12 +179,10 @@ export default function Apply() {
       </div>
     );
   }
-
   const onChange = (name, value) => {
     setForm((f) => ({ ...f, [name]: value }));
     setErrors((e) => ({ ...e, [name]: undefined }));
   };
-
   const validateFields = (fields) => {
     const errs = {};
     fields.forEach((f) => {
@@ -190,14 +194,12 @@ export default function Apply() {
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
-
   const saveProgress = async () => {
     const { data } = await api.patch(`/applications/${application.application_id}`, { applicant_data: form });
     setApplication(data);
   };
-
   const goNext = async () => {
-    if (step === 1 && !validateFields(PERSONAL_FIELDS)) { toast.error("Please fix the highlighted fields"); return; }
+    if (step === 1 && !validateFields(personalFields)) { toast.error("Please fix the highlighted fields"); return; }
     if (step === 2 && !validateFields(service.detailFields)) { toast.error("Please fix the highlighted fields"); return; }
     if (step === 3) {
       const missing = service.docs.filter((d) => d.required && !docFor(d.key));
@@ -212,7 +214,6 @@ export default function Apply() {
     setStep((s) => Math.min(s + 1, 6));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
   const startPayment = async () => {
     setPaying(true);
     try {
@@ -256,7 +257,6 @@ export default function Apply() {
       setPaying(false);
     }
   };
-
   const completeDemoPayment = async () => {
     setPaying(true);
     try {
@@ -274,13 +274,11 @@ export default function Apply() {
       setPaying(false);
     }
   };
-
   const reviewRows = [
     ["Service", service.name],
     ...PERSONAL_FIELDS.filter((f) => form[f.name]).map((f) => [f.label, form[f.name]]),
     ...service.detailFields.filter((f) => form[f.name]).map((f) => [f.label, form[f.name]]),
   ];
-
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -293,20 +291,17 @@ export default function Apply() {
             </h1>
             <p className="mt-1 text-sm text-slate-500">Application ID: <span className="font-semibold text-slate-700" data-testid="apply-app-id">{application.application_id}</span></p>
           </div>
-
           <Stepper step={step} />
-
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.3 }}>
               {step === 1 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-9" data-testid="step-personal">
                   <h2 className="text-xl font-medium text-slate-900 mb-6">Personal Details</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {PERSONAL_FIELDS.map((f) => <Field key={f.name} field={f} value={form[f.name]} onChange={onChange} error={errors[f.name]} />)}
+                    {personalFields.map((f) => <Field key={f.name} field={f} value={form[f.name]} onChange={onChange} error={errors[f.name]} />)}
                   </div>
                 </div>
               )}
-
               {step === 2 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-9" data-testid="step-details">
                   <h2 className="text-xl font-medium text-slate-900 mb-6">Application Details</h2>
@@ -315,7 +310,6 @@ export default function Apply() {
                   </div>
                 </div>
               )}
-
               {step === 3 && (
                 <div data-testid="step-documents">
                   <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-9 mb-5">
@@ -330,7 +324,6 @@ export default function Apply() {
                   </div>
                 </div>
               )}
-
               {step === 4 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-9" data-testid="step-review">
                   <div className="flex items-center justify-between mb-6">
@@ -341,7 +334,7 @@ export default function Apply() {
                     {reviewRows.map(([k, v]) => (
                       <div key={k} className="py-3 grid grid-cols-3 gap-4">
                         <dt className="text-xs font-semibold text-slate-400 uppercase tracking-wider pt-0.5">{k}</dt>
-                        <dd className="col-span-2 text-sm font-medium text-slate-800 break-words">{k.toLowerCase().includes("mobile") ? v : v}</dd>
+                        <dd className="col-span-2 text-sm font-medium text-slate-800 break-words">{v}</dd>
                       </div>
                     ))}
                     <div className="py-3 grid grid-cols-3 gap-4">
@@ -361,7 +354,6 @@ export default function Apply() {
                   </dl>
                 </div>
               )}
-
               {step === 5 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-9 text-center" data-testid="step-payment">
                   <span className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-5">
@@ -383,7 +375,6 @@ export default function Apply() {
                   </p>
                 </div>
               )}
-
               {step === 6 && (
                 <div className="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-7 sm:p-10 text-center" data-testid="step-submitted">
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 14 }}
@@ -430,7 +421,6 @@ export default function Apply() {
               )}
             </motion.div>
           </AnimatePresence>
-
           {step < 5 && (
             <div className="mt-8 flex items-center justify-between">
               <button onClick={() => setStep((s) => Math.max(s - 1, 1))} disabled={step === 1} data-testid="wizard-back-btn"
@@ -447,7 +437,6 @@ export default function Apply() {
           )}
         </div>
       </main>
-
       {showDemoPay && order && (
         <DemoPaymentModal order={order} paying={paying} onSuccess={completeDemoPayment} onClose={() => setShowDemoPay(false)} />
       )}
