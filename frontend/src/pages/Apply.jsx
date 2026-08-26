@@ -68,13 +68,15 @@ function Stepper({ step }) {
         const active = n === step;
         return (
           <div key={label} className="flex items-center flex-1 last:flex-none min-w-0">
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center min-w-0">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                 done ? "bg-emerald-500 text-white" : active ? "bg-royal text-white shadow-lg shadow-blue-700/30" : "bg-slate-100 text-slate-400"
               }`} data-testid={`stepper-step-${n}`}>
                 {done ? <Check className="w-4 h-4" /> : `0${n}`}
               </div>
-              <span className={`mt-2 text-[10px] sm:text-xs font-semibold whitespace-nowrap ${active ? "text-royal" : done ? "text-emerald-600" : "text-slate-400"}`}>
+              <span className={`mt-2 text-[10px] sm:text-xs font-semibold text-center leading-tight sm:whitespace-nowrap ${
+                active ? "text-royal" : done ? "text-emerald-600" : "text-slate-400"
+              } ${active ? "block" : "hidden sm:block"}`}>
                 {label}
               </span>
             </div>
@@ -85,7 +87,6 @@ function Stepper({ step }) {
     </div>
   );
 }
-
 function DemoPaymentModal({ order, onSuccess, onClose, paying }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-navy-deep/60 backdrop-blur-sm px-5" data-testid="demo-payment-modal">
